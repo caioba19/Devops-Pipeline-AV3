@@ -9,28 +9,86 @@
 <body>
   <main>
     <header class="cabecalho">
-      <div>
-        <h1>Portal do Laboratório de TI</h1>
-        <p class="sub">Gestão unificada de inventário e reservas · PostgreSQL na Aiven</p>
+      <div class="cabecalho-info">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+          </svg>
+        </div>
+        <div>
+          <h1>Portal do Laboratório de TI</h1>
+          <p class="sub">Gestão unificada de inventário e reservas · Aiven PostgreSQL</p>
+        </div>
       </div>
-      <a href="{{ url_for('healthz') }}" target="_blank" class="badge-health">Healthz 200 OK</a>
+      <a href="{{ url_for('healthz') }}" target="_blank" class="badge-health">
+        <span class="dot-pulse"></span>
+        /healthz 200 OK
+      </a>
     </header>
 
+    <!-- Métricas / KPIs no Topo -->
+    {% set total_itens = equipamentos|length %}
+    {% set disp = namespace(count=0) %}
+    {% set em_uso = namespace(count=0) %}
+    {% set manut = namespace(count=0) %}
+    {% for item in equipamentos %}
+      {% if item.status == 'Disponível' %}{% set disp.count = disp.count + 1 %}{% endif %}
+      {% if item.status == 'Em Uso' %}{% set em_uso.count = em_uso.count + 1 %}{% endif %}
+      {% if item.status == 'Em Manutenção' %}{% set manut.count = manut.count + 1 %}{% endif %}
+    {% endfor %}
+
+    <div class="metricas-grid">
+      <div class="card-metrica">
+        <span class="metrica-label">Total Cadastrado</span>
+        <span class="metrica-valor">{{ total_itens }}</span>
+      </div>
+      <div class="card-metrica">
+        <span class="metrica-label" style="color: var(--verde-brilho);">Disponíveis</span>
+        <span class="metrica-valor" style="color: var(--verde-brilho);">{{ disp.count }}</span>
+      </div>
+      <div class="card-metrica">
+        <span class="metrica-label" style="color: var(--cor-brilho);">Em Uso</span>
+        <span class="metrica-valor" style="color: var(--cor-brilho);">{{ em_uso.count }}</span>
+      </div>
+      <div class="card-metrica">
+        <span class="metrica-label" style="color: var(--amarelo);">Manutenção</span>
+        <span class="metrica-valor" style="color: var(--amarelo);">{{ manut.count }}</span>
+      </div>
+    </div>
+
+    <!-- Navegação em Abas -->
     <nav class="abas">
       <a href="{{ url_for('index') }}" class="aba {% if aba == 'equipamentos' %}ativa{% endif %}">
-        📦 Controle de Equipamentos
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+          <line x1="12" y1="22.08" x2="12" y2="12"></line>
+        </svg>
+        Controle de Equipamentos
       </a>
       <a href="{{ url_for('index_reservas') }}" class="aba {% if aba == 'reservas' %}ativa{% endif %}">
-        📅 Agendamento de Salas / Labs
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        Agendamento de Salas / Labs
       </a>
     </nav>
 
+    <!-- Formulário -->
     <form method="post" action="{{ url_for('criar') }}" class="card form-grid">
-      <h2>Cadastrar Novo Equipamento</h2>
+      <div class="titulo-secao">
+        <span>Cadastrar Novo Equipamento</span>
+      </div>
 
       <div class="campo">
         <label for="nome">Nome do Equipamento *</label>
-        <input id="nome" name="nome" required maxlength="120" placeholder="Ex.: Switch Cisco 24 Portas Gigabit">
+        <input id="nome" name="nome" required maxlength="120" placeholder="Ex.: Switch Cisco Catalyst 24p Gigabit">
       </div>
 
       <div class="campo">
@@ -55,16 +113,29 @@
         </div>
       </div>
 
-      <button type="submit" class="btn-primario">Cadastrar Equipamento</button>
+      <button type="submit" class="btn-primario">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Cadastrar Equipamento
+      </button>
     </form>
 
+    <!-- Listagem com Busca Dinâmica -->
     <section class="secao-lista">
-      <h2>Equipamentos Cadastrados ({{ equipamentos|length }})</h2>
+      <div class="titulo-secao">
+        <span>Equipamentos Cadastrados (<span id="contagem-lista">{{ equipamentos|length }}</span>)</span>
+      </div>
+
+      <div class="barra-busca">
+        <input id="filtro-busca" type="text" class="input-busca" placeholder="🔍 Buscar por nome, categoria ou status..." onkeyup="filtrarLista()">
+      </div>
 
       {% if equipamentos %}
-      <ul class="lista">
+      <ul class="lista" id="lista-itens">
         {% for item in equipamentos %}
-        <li class="card item-equipamento">
+        <li class="item-equipamento" data-busca="{{ item.nome|lower }} {{ item.categoria|lower }} {{ item.status|lower }}">
           <div class="info-equipamento">
             <div class="topo-item">
               <strong>{{ item.nome }}</strong>
@@ -79,7 +150,7 @@
           <div class="acoes">
             <a href="{{ url_for('editar', item_id=item.id) }}" class="btn-editar">Editar</a>
             <form method="post" action="{{ url_for('excluir', item_id=item.id) }}">
-              <button type="submit" class="btn-perigo" onclick="return confirm('Confirma a exclusão deste equipamento?');">Excluir</button>
+              <button type="submit" class="btn-perigo">Excluir</button>
             </form>
           </div>
         </li>
@@ -90,6 +161,24 @@
       {% endif %}
     </section>
   </main>
+
   <script src="{{ url_for('static', filename='validacoes.js') }}"></script>
+  <script>
+    function filtrarLista() {
+      const termo = document.getElementById("filtro-busca").value.toLowerCase();
+      const itens = document.querySelectorAll("#lista-itens li");
+      let visiveis = 0;
+      itens.forEach(li => {
+        const texto = li.getAttribute("data-busca") || "";
+        if (texto.includes(termo)) {
+          li.style.display = "flex";
+          visiveis++;
+        } else {
+          li.style.display = "none";
+        }
+      });
+      document.getElementById("contagem-lista").textContent = visiveis;
+    }
+  </script>
 </body>
 </html>

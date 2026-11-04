@@ -9,28 +9,86 @@
 <body>
   <main>
     <header class="cabecalho">
-      <div>
-        <h1>Portal do Laboratório de TI</h1>
-        <p class="sub">Gestão unificada de inventário e reservas · PostgreSQL na Aiven</p>
+      <div class="cabecalho-info">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </div>
+        <div>
+          <h1>Portal do Laboratório de TI</h1>
+          <p class="sub">Gestão unificada de inventário e reservas · Aiven PostgreSQL</p>
+        </div>
       </div>
-      <a href="{{ url_for('healthz') }}" target="_blank" class="badge-health">Healthz 200 OK</a>
+      <a href="{{ url_for('healthz') }}" target="_blank" class="badge-health">
+        <span class="dot-pulse"></span>
+        /healthz 200 OK
+      </a>
     </header>
 
+    <!-- Métricas / KPIs de Reservas -->
+    {% set total_res = reservas|length %}
+    {% set manha = namespace(count=0) %}
+    {% set tarde = namespace(count=0) %}
+    {% set noite = namespace(count=0) %}
+    {% for r in reservas %}
+      {% if r.turno == 'Manhã' %}{% set manha.count = manha.count + 1 %}{% endif %}
+      {% if r.turno == 'Tarde' %}{% set tarde.count = tarde.count + 1 %}{% endif %}
+      {% if r.turno == 'Noite' %}{% set noite.count = noite.count + 1 %}{% endif %}
+    {% endfor %}
+
+    <div class="metricas-grid">
+      <div class="card-metrica">
+        <span class="metrica-label">Total Reservas</span>
+        <span class="metrica-valor">{{ total_res }}</span>
+      </div>
+      <div class="card-metrica">
+        <span class="metrica-label" style="color: var(--verde-brilho);">Manhã</span>
+        <span class="metrica-valor" style="color: var(--verde-brilho);">{{ manha.count }}</span>
+      </div>
+      <div class="card-metrica">
+        <span class="metrica-label" style="color: var(--amarelo);">Tarde</span>
+        <span class="metrica-valor" style="color: var(--amarelo);">{{ tarde.count }}</span>
+      </div>
+      <div class="card-metrica">
+        <span class="metrica-label" style="color: var(--cor-brilho);">Noite</span>
+        <span class="metrica-valor" style="color: var(--cor-brilho);">{{ noite.count }}</span>
+      </div>
+    </div>
+
+    <!-- Navegação em Abas -->
     <nav class="abas">
       <a href="{{ url_for('index') }}" class="aba {% if aba == 'equipamentos' %}ativa{% endif %}">
-        📦 Controle de Equipamentos
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+          <line x1="12" y1="22.08" x2="12" y2="12"></line>
+        </svg>
+        Controle de Equipamentos
       </a>
       <a href="{{ url_for('index_reservas') }}" class="aba {% if aba == 'reservas' %}ativa{% endif %}">
-        📅 Agendamento de Salas / Labs
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        Agendamento de Salas / Labs
       </a>
     </nav>
 
+    <!-- Formulário -->
     <form method="post" action="{{ url_for('criar_reserva') }}" class="card form-grid">
-      <h2>Agendar Nova Sala / Laboratório</h2>
+      <div class="titulo-secao">
+        <span>Agendar Nova Sala / Laboratório</span>
+      </div>
 
       <div class="campo">
         <label for="sala">Sala ou Laboratório *</label>
-        <input id="sala" name="sala" required maxlength="100" placeholder="Ex.: Laboratório 04 - Redes e Infraestrutura">
+        <input id="sala" name="sala" required maxlength="100" placeholder="Ex.: Laboratório 04 - Infraestrutura Cloud">
       </div>
 
       <div class="campo">
@@ -54,16 +112,29 @@
         </div>
       </div>
 
-      <button type="submit" class="btn-primario">Confirmar Agendamento</button>
+      <button type="submit" class="btn-primario">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Confirmar Agendamento
+      </button>
     </form>
 
+    <!-- Listagem com Busca Dinâmica -->
     <section class="secao-lista">
-      <h2>Reservas Cadastradas ({{ reservas|length }})</h2>
+      <div class="titulo-secao">
+        <span>Reservas Cadastradas (<span id="contagem-lista">{{ reservas|length }}</span>)</span>
+      </div>
+
+      <div class="barra-busca">
+        <input id="filtro-busca" type="text" class="input-busca" placeholder="🔍 Buscar por sala, responsável ou turno..." onkeyup="filtrarLista()">
+      </div>
 
       {% if reservas %}
-      <ul class="lista">
+      <ul class="lista" id="lista-itens">
         {% for item in reservas %}
-        <li class="card item-equipamento">
+        <li class="item-equipamento" data-busca="{{ item.sala|lower }} {{ item.responsavel|lower }} {{ item.turno|lower }}">
           <div class="info-equipamento">
             <div class="topo-item">
               <strong>{{ item.sala }}</strong>
@@ -78,7 +149,7 @@
           <div class="acoes">
             <a href="{{ url_for('editar_reserva', reserva_id=item.id) }}" class="btn-editar">Editar</a>
             <form method="post" action="{{ url_for('excluir_reserva', reserva_id=item.id) }}">
-              <button type="submit" class="btn-perigo" onclick="return confirm('Confirma o cancelamento desta reserva?');">Excluir</button>
+              <button type="submit" class="btn-perigo">Excluir</button>
             </form>
           </div>
         </li>
@@ -89,6 +160,24 @@
       {% endif %}
     </section>
   </main>
+
   <script src="{{ url_for('static', filename='validacoes.js') }}"></script>
+  <script>
+    function filtrarLista() {
+      const termo = document.getElementById("filtro-busca").value.toLowerCase();
+      const itens = document.querySelectorAll("#lista-itens li");
+      let visiveis = 0;
+      itens.forEach(li => {
+        const texto = li.getAttribute("data-busca") || "";
+        if (texto.includes(termo)) {
+          li.style.display = "flex";
+          visiveis++;
+        } else {
+          li.style.display = "none";
+        }
+      });
+      document.getElementById("contagem-lista").textContent = visiveis;
+    }
+  </script>
 </body>
 </html>
