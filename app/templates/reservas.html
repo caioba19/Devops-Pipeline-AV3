@@ -23,41 +23,14 @@
           <p class="sub">Gestão unificada de inventário e reservas · Aiven PostgreSQL</p>
         </div>
       </div>
-      <a href="{{ url_for('healthz') }}" target="_blank" class="badge-health">
-        <span class="dot-pulse"></span>
-        /healthz 200 OK
-      </a>
+      <div class="header-badges">
+        <span class="badge-cloud">aiven-pg-cloud</span>
+        <a href="{{ url_for('healthz') }}" target="_blank" class="badge-health">
+          <span class="dot-pulse"></span>
+          /healthz 200 OK
+        </a>
+      </div>
     </header>
-
-    <!-- Métricas / KPIs de Reservas -->
-    {% set total_res = reservas|length %}
-    {% set manha = namespace(count=0) %}
-    {% set tarde = namespace(count=0) %}
-    {% set noite = namespace(count=0) %}
-    {% for r in reservas %}
-      {% if r.turno == 'Manhã' %}{% set manha.count = manha.count + 1 %}{% endif %}
-      {% if r.turno == 'Tarde' %}{% set tarde.count = tarde.count + 1 %}{% endif %}
-      {% if r.turno == 'Noite' %}{% set noite.count = noite.count + 1 %}{% endif %}
-    {% endfor %}
-
-    <div class="metricas-grid">
-      <div class="card-metrica">
-        <span class="metrica-label">Total Reservas</span>
-        <span class="metrica-valor">{{ total_res }}</span>
-      </div>
-      <div class="card-metrica">
-        <span class="metrica-label" style="color: var(--verde-brilho);">Manhã</span>
-        <span class="metrica-valor" style="color: var(--verde-brilho);">{{ manha.count }}</span>
-      </div>
-      <div class="card-metrica">
-        <span class="metrica-label" style="color: var(--amarelo);">Tarde</span>
-        <span class="metrica-valor" style="color: var(--amarelo);">{{ tarde.count }}</span>
-      </div>
-      <div class="card-metrica">
-        <span class="metrica-label" style="color: var(--cor-brilho);">Noite</span>
-        <span class="metrica-valor" style="color: var(--cor-brilho);">{{ noite.count }}</span>
-      </div>
-    </div>
 
     <!-- Navegação em Abas -->
     <nav class="abas">
@@ -80,85 +53,140 @@
       </a>
     </nav>
 
-    <!-- Formulário -->
-    <form method="post" action="{{ url_for('criar_reserva') }}" class="card form-grid">
-      <div class="titulo-secao">
-        <span>Agendar Nova Sala / Laboratório</span>
-      </div>
+    <!-- LAYOUT DASHBOARD 2 COLUNAS -->
+    <div class="layout-dashboard">
 
-      <div class="campo">
-        <label for="sala">Sala ou Laboratório *</label>
-        <input id="sala" name="sala" required maxlength="100" placeholder="Ex.: Laboratório 04 - Infraestrutura Cloud">
-      </div>
+      <!-- COLUNA DA ESQUERDA: Formulário de Agendamento + Infra -->
+      <aside class="coluna-acoes">
+        <form method="post" action="{{ url_for('criar_reserva') }}" class="card form-grid">
+          <div class="titulo-secao">
+            <span>Nova Reserva</span>
+          </div>
 
-      <div class="campo">
-        <label for="responsavel">Professor ou Responsável *</label>
-        <input id="responsavel" name="responsavel" required maxlength="100" placeholder="Ex.: Prof. Carlos Eduardo">
-      </div>
+          <div class="campo">
+            <label for="sala">Sala ou Laboratório *</label>
+            <input id="sala" name="sala" required maxlength="100" placeholder="Ex.: Laboratório 04 - Cloud">
+          </div>
 
-      <div class="linha-dupla">
-        <div class="campo">
-          <label for="data_reserva">Data do Agendamento * (Campo Data)</label>
-          <input id="data_reserva" name="data_reserva" type="date" required>
-        </div>
+          <div class="campo">
+            <label for="responsavel">Professor ou Responsável *</label>
+            <input id="responsavel" name="responsavel" required maxlength="100" placeholder="Ex.: Prof. Carlos Eduardo">
+          </div>
 
-        <div class="campo">
-          <label for="turno">Turno / Período *</label>
-          <select id="turno" name="turno" required>
-            <option value="Manhã" selected>Manhã (08:00 - 12:00)</option>
-            <option value="Tarde">Tarde (13:30 - 17:30)</option>
-            <option value="Noite">Noite (18:30 - 22:30)</option>
-          </select>
-        </div>
-      </div>
-
-      <button type="submit" class="btn-primario">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        Confirmar Agendamento
-      </button>
-    </form>
-
-    <!-- Listagem com Busca Dinâmica -->
-    <section class="secao-lista">
-      <div class="titulo-secao">
-        <span>Reservas Cadastradas (<span id="contagem-lista">{{ reservas|length }}</span>)</span>
-      </div>
-
-      <div class="barra-busca">
-        <input id="filtro-busca" type="text" class="input-busca" placeholder="🔍 Buscar por sala, responsável ou turno..." onkeyup="filtrarLista()">
-      </div>
-
-      {% if reservas %}
-      <ul class="lista" id="lista-itens">
-        {% for item in reservas %}
-        <li class="item-equipamento" data-busca="{{ item.sala|lower }} {{ item.responsavel|lower }} {{ item.turno|lower }}">
-          <div class="info-equipamento">
-            <div class="topo-item">
-              <strong>{{ item.sala }}</strong>
-              <span class="status-tag status-em-uso">{{ item.turno }}</span>
+          <div class="linha-dupla">
+            <div class="campo">
+              <label for="data_reserva">Data * (Campo Data)</label>
+              <input id="data_reserva" name="data_reserva" type="date" required>
             </div>
-            <p class="detalhes-item">
-              <span><strong>Responsável:</strong> {{ item.responsavel }}</span>
-              <span><strong>Data:</strong> {{ item.data_reserva.strftime('%d/%m/%Y') }}</span>
-            </p>
-            <small>#{{ item.id }} · Solicitado em {{ item.criado_em.strftime('%d/%m/%Y %H:%M') }}</small>
+
+            <div class="campo">
+              <label for="turno">Turno *</label>
+              <select id="turno" name="turno" required>
+                <option value="Manhã" selected>Manhã (08h - 12h)</option>
+                <option value="Tarde">Tarde (13h - 17h)</option>
+                <option value="Noite">Noite (18h - 22h)</option>
+              </select>
+            </div>
           </div>
-          <div class="acoes">
-            <a href="{{ url_for('editar_reserva', reserva_id=item.id) }}" class="btn-editar">Editar</a>
-            <form method="post" action="{{ url_for('excluir_reserva', reserva_id=item.id) }}">
-              <button type="submit" class="btn-perigo">Excluir</button>
-            </form>
-          </div>
-        </li>
+
+          <button type="submit" class="btn-primario">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Confirmar Agendamento
+          </button>
+        </form>
+
+        <!-- Card de Status do Ambiente -->
+        <div class="card-infra">
+          <span class="card-infra-titulo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            Ambiente & Infraestrutura
+          </span>
+          <ul class="infra-lista">
+            <li><span>Banco</span> <strong>PostgreSQL (Aiven)</strong></li>
+            <li><span>Nuvem</span> <strong>Google Cloud (SP)</strong></li>
+            <li><span>IaC</span> <strong>Terraform 1.9+</strong></li>
+            <li><span>CI/CD</span> <strong>GitHub Actions</strong></li>
+            <li><span>Hospedagem</span> <strong>Render Cloud</strong></li>
+            <li><span>Equipe</span> <strong>DevOps AV3 · Equipe 01</strong></li>
+          </ul>
+        </div>
+      </aside>
+
+      <!-- COLUNA DA DIREITA: KPIs, Busca e Lista -->
+      <section class="coluna-conteudo">
+        <!-- Métricas / KPIs de Reservas -->
+        {% set total_res = reservas|length %}
+        {% set manha = namespace(count=0) %}
+        {% set tarde = namespace(count=0) %}
+        {% set noite = namespace(count=0) %}
+        {% for r in reservas %}
+          {% if r.turno == 'Manhã' %}{% set manha.count = manha.count + 1 %}{% endif %}
+          {% if r.turno == 'Tarde' %}{% set tarde.count = tarde.count + 1 %}{% endif %}
+          {% if r.turno == 'Noite' %}{% set noite.count = noite.count + 1 %}{% endif %}
         {% endfor %}
-      </ul>
-      {% else %}
-      <p class="vazio">Nenhuma reserva agendada ainda. Utilize o formulário acima para agendar um horário.</p>
-      {% endif %}
-    </section>
+
+        <div class="metricas-grid">
+          <div class="card-metrica">
+            <span class="metrica-label">Total Reservas</span>
+            <span class="metrica-valor">{{ total_res }}</span>
+          </div>
+          <div class="card-metrica">
+            <span class="metrica-label" style="color: var(--verde-brilho);">Manhã</span>
+            <span class="metrica-valor" style="color: var(--verde-brilho);">{{ manha.count }}</span>
+          </div>
+          <div class="card-metrica">
+            <span class="metrica-label" style="color: var(--amarelo);">Tarde</span>
+            <span class="metrica-valor" style="color: var(--amarelo);">{{ tarde.count }}</span>
+          </div>
+          <div class="card-metrica">
+            <span class="metrica-label" style="color: var(--cor-brilho);">Noite</span>
+            <span class="metrica-valor" style="color: var(--cor-brilho);">{{ noite.count }}</span>
+          </div>
+        </div>
+
+        <!-- Barra de Busca Instantânea -->
+        <div class="barra-busca">
+          <input id="filtro-busca" type="text" class="input-busca" placeholder="🔍 Buscar por sala, responsável ou turno..." onkeyup="filtrarLista()">
+        </div>
+
+        <!-- Listagem de Reservas -->
+        <div class="titulo-secao" style="margin-bottom: 8px;">
+          <span>Salas e Horários Agendados (<span id="contagem-lista">{{ reservas|length }}</span>)</span>
+        </div>
+
+        {% if reservas %}
+        <ul class="lista" id="lista-itens">
+          {% for item in reservas %}
+          <li class="item-equipamento" data-busca="{{ item.sala|lower }} {{ item.responsavel|lower }} {{ item.turno|lower }}">
+            <div class="info-equipamento">
+              <div class="topo-item">
+                <strong>{{ item.sala }}</strong>
+                <span class="status-tag status-em-uso">{{ item.turno }}</span>
+              </div>
+              <p class="detalhes-item">
+                <span><strong>Responsável:</strong> {{ item.responsavel }}</span>
+                <span><strong>Data:</strong> {{ item.data_reserva.strftime('%d/%m/%Y') }}</span>
+              </p>
+              <small>#{{ item.id }} · Solicitado em {{ item.criado_em.strftime('%d/%m/%Y %H:%M') }}</small>
+            </div>
+            <div class="acoes">
+              <a href="{{ url_for('editar_reserva', reserva_id=item.id) }}" class="btn-editar">Editar</a>
+              <form method="post" action="{{ url_for('excluir_reserva', reserva_id=item.id) }}">
+                <button type="submit" class="btn-perigo">Excluir</button>
+              </form>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="vazio">Nenhuma reserva agendada ainda. Utilize o formulário ao lado para agendar um horário.</p>
+        {% endif %}
+      </section>
+
+    </div>
   </main>
 
   <script src="{{ url_for('static', filename='validacoes.js') }}"></script>

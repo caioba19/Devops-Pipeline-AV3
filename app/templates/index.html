@@ -23,41 +23,14 @@
           <p class="sub">Gestão unificada de inventário e reservas · Aiven PostgreSQL</p>
         </div>
       </div>
-      <a href="{{ url_for('healthz') }}" target="_blank" class="badge-health">
-        <span class="dot-pulse"></span>
-        /healthz 200 OK
-      </a>
+      <div class="header-badges">
+        <span class="badge-cloud">aiven-pg-cloud</span>
+        <a href="{{ url_for('healthz') }}" target="_blank" class="badge-health">
+          <span class="dot-pulse"></span>
+          /healthz 200 OK
+        </a>
+      </div>
     </header>
-
-    <!-- Métricas / KPIs no Topo -->
-    {% set total_itens = equipamentos|length %}
-    {% set disp = namespace(count=0) %}
-    {% set em_uso = namespace(count=0) %}
-    {% set manut = namespace(count=0) %}
-    {% for item in equipamentos %}
-      {% if item.status == 'Disponível' %}{% set disp.count = disp.count + 1 %}{% endif %}
-      {% if item.status == 'Em Uso' %}{% set em_uso.count = em_uso.count + 1 %}{% endif %}
-      {% if item.status == 'Em Manutenção' %}{% set manut.count = manut.count + 1 %}{% endif %}
-    {% endfor %}
-
-    <div class="metricas-grid">
-      <div class="card-metrica">
-        <span class="metrica-label">Total Cadastrado</span>
-        <span class="metrica-valor">{{ total_itens }}</span>
-      </div>
-      <div class="card-metrica">
-        <span class="metrica-label" style="color: var(--verde-brilho);">Disponíveis</span>
-        <span class="metrica-valor" style="color: var(--verde-brilho);">{{ disp.count }}</span>
-      </div>
-      <div class="card-metrica">
-        <span class="metrica-label" style="color: var(--cor-brilho);">Em Uso</span>
-        <span class="metrica-valor" style="color: var(--cor-brilho);">{{ em_uso.count }}</span>
-      </div>
-      <div class="card-metrica">
-        <span class="metrica-label" style="color: var(--amarelo);">Manutenção</span>
-        <span class="metrica-valor" style="color: var(--amarelo);">{{ manut.count }}</span>
-      </div>
-    </div>
 
     <!-- Navegação em Abas -->
     <nav class="abas">
@@ -80,86 +53,141 @@
       </a>
     </nav>
 
-    <!-- Formulário -->
-    <form method="post" action="{{ url_for('criar') }}" class="card form-grid">
-      <div class="titulo-secao">
-        <span>Cadastrar Novo Equipamento</span>
-      </div>
+    <!-- LAYOUT DASHBOARD 2 COLUNAS -->
+    <div class="layout-dashboard">
 
-      <div class="campo">
-        <label for="nome">Nome do Equipamento *</label>
-        <input id="nome" name="nome" required maxlength="120" placeholder="Ex.: Switch Cisco Catalyst 24p Gigabit">
-      </div>
+      <!-- COLUNA DA ESQUERDA: Formulário Fixo + Dados da Infraestrutura -->
+      <aside class="coluna-acoes">
+        <form method="post" action="{{ url_for('criar') }}" class="card form-grid">
+          <div class="titulo-secao">
+            <span>Novo Equipamento</span>
+          </div>
 
-      <div class="campo">
-        <label for="categoria">Categoria *</label>
-        <input id="categoria" name="categoria" required maxlength="80" placeholder="Ex.: Redes, Servidores, Periféricos">
-      </div>
+          <div class="campo">
+            <label for="nome">Nome do Equipamento *</label>
+            <input id="nome" name="nome" required maxlength="120" placeholder="Ex.: Switch Cisco 24p Gigabit">
+          </div>
 
-      <div class="linha-dupla">
-        <div class="campo">
-          <label for="quantidade">Quantidade * (Campo Numérico)</label>
-          <input id="quantidade" name="quantidade" type="number" min="0" required value="1">
-        </div>
+          <div class="campo">
+            <label for="categoria">Categoria *</label>
+            <input id="categoria" name="categoria" required maxlength="80" placeholder="Ex.: Redes, Servidores, Periféricos">
+          </div>
 
-        <div class="campo">
-          <label for="status">Status *</label>
-          <select id="status" name="status" required>
-            <option value="Disponível" selected>Disponível</option>
-            <option value="Em Uso">Em Uso</option>
-            <option value="Em Manutenção">Em Manutenção</option>
-            <option value="Desativado">Desativado</option>
-          </select>
-        </div>
-      </div>
-
-      <button type="submit" class="btn-primario">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        Cadastrar Equipamento
-      </button>
-    </form>
-
-    <!-- Listagem com Busca Dinâmica -->
-    <section class="secao-lista">
-      <div class="titulo-secao">
-        <span>Equipamentos Cadastrados (<span id="contagem-lista">{{ equipamentos|length }}</span>)</span>
-      </div>
-
-      <div class="barra-busca">
-        <input id="filtro-busca" type="text" class="input-busca" placeholder="🔍 Buscar por nome, categoria ou status..." onkeyup="filtrarLista()">
-      </div>
-
-      {% if equipamentos %}
-      <ul class="lista" id="lista-itens">
-        {% for item in equipamentos %}
-        <li class="item-equipamento" data-busca="{{ item.nome|lower }} {{ item.categoria|lower }} {{ item.status|lower }}">
-          <div class="info-equipamento">
-            <div class="topo-item">
-              <strong>{{ item.nome }}</strong>
-              <span class="status-tag status-{{ item.status|lower|replace(' ', '-') }}">{{ item.status }}</span>
+          <div class="linha-dupla">
+            <div class="campo">
+              <label for="quantidade">Qtd * (Numérico)</label>
+              <input id="quantidade" name="quantidade" type="number" min="0" required value="1">
             </div>
-            <p class="detalhes-item">
-              <span><strong>Categoria:</strong> {{ item.categoria }}</span>
-              <span><strong>Quantidade:</strong> {{ item.quantidade }} un.</span>
-            </p>
-            <small>#{{ item.id }} · Registrado em {{ item.criado_em.strftime('%d/%m/%Y %H:%M') }}</small>
+
+            <div class="campo">
+              <label for="status">Status *</label>
+              <select id="status" name="status" required>
+                <option value="Disponível" selected>Disponível</option>
+                <option value="Em Uso">Em Uso</option>
+                <option value="Em Manutenção">Em Manutenção</option>
+                <option value="Desativado">Desativado</option>
+              </select>
+            </div>
           </div>
-          <div class="acoes">
-            <a href="{{ url_for('editar', item_id=item.id) }}" class="btn-editar">Editar</a>
-            <form method="post" action="{{ url_for('excluir', item_id=item.id) }}">
-              <button type="submit" class="btn-perigo">Excluir</button>
-            </form>
-          </div>
-        </li>
+
+          <button type="submit" class="btn-primario">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Cadastrar Equipamento
+          </button>
+        </form>
+
+        <!-- Card de Status do Ambiente -->
+        <div class="card-infra">
+          <span class="card-infra-titulo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            Ambiente & Infraestrutura
+          </span>
+          <ul class="infra-lista">
+            <li><span>Banco</span> <strong>PostgreSQL (Aiven)</strong></li>
+            <li><span>Nuvem</span> <strong>Google Cloud (SP)</strong></li>
+            <li><span>IaC</span> <strong>Terraform 1.9+</strong></li>
+            <li><span>CI/CD</span> <strong>GitHub Actions</strong></li>
+            <li><span>Hospedagem</span> <strong>Render Cloud</strong></li>
+            <li><span>Equipe</span> <strong>DevOps AV3 · Equipe 01</strong></li>
+          </ul>
+        </div>
+      </aside>
+
+      <!-- COLUNA DA DIREITA: KPIs, Busca e Lista -->
+      <section class="coluna-conteudo">
+        <!-- Métricas / KPIs -->
+        {% set total_itens = equipamentos|length %}
+        {% set disp = namespace(count=0) %}
+        {% set em_uso = namespace(count=0) %}
+        {% set manut = namespace(count=0) %}
+        {% for item in equipamentos %}
+          {% if item.status == 'Disponível' %}{% set disp.count = disp.count + 1 %}{% endif %}
+          {% if item.status == 'Em Uso' %}{% set em_uso.count = em_uso.count + 1 %}{% endif %}
+          {% if item.status == 'Em Manutenção' %}{% set manut.count = manut.count + 1 %}{% endif %}
         {% endfor %}
-      </ul>
-      {% else %}
-      <p class="vazio">Nenhum equipamento cadastrado ainda. Utilize o formulário acima para adicionar o primeiro.</p>
-      {% endif %}
-    </section>
+
+        <div class="metricas-grid">
+          <div class="card-metrica">
+            <span class="metrica-label">Total Cadastrado</span>
+            <span class="metrica-valor">{{ total_itens }}</span>
+          </div>
+          <div class="card-metrica">
+            <span class="metrica-label" style="color: var(--verde-brilho);">Disponíveis</span>
+            <span class="metrica-valor" style="color: var(--verde-brilho);">{{ disp.count }}</span>
+          </div>
+          <div class="card-metrica">
+            <span class="metrica-label" style="color: var(--cor-brilho);">Em Uso</span>
+            <span class="metrica-valor" style="color: var(--cor-brilho);">{{ em_uso.count }}</span>
+          </div>
+          <div class="card-metrica">
+            <span class="metrica-label" style="color: var(--amarelo);">Manutenção</span>
+            <span class="metrica-valor" style="color: var(--amarelo);">{{ manut.count }}</span>
+          </div>
+        </div>
+
+        <!-- Barra de Busca Instantânea -->
+        <div class="barra-busca">
+          <input id="filtro-busca" type="text" class="input-busca" placeholder="🔍 Buscar por nome, categoria ou status..." onkeyup="filtrarLista()">
+        </div>
+
+        <!-- Listagem de Equipamentos -->
+        <div class="titulo-secao" style="margin-bottom: 8px;">
+          <span>Itens no Inventário (<span id="contagem-lista">{{ equipamentos|length }}</span>)</span>
+        </div>
+
+        {% if equipamentos %}
+        <ul class="lista" id="lista-itens">
+          {% for item in equipamentos %}
+          <li class="item-equipamento" data-busca="{{ item.nome|lower }} {{ item.categoria|lower }} {{ item.status|lower }}">
+            <div class="info-equipamento">
+              <div class="topo-item">
+                <strong>{{ item.nome }}</strong>
+                <span class="status-tag status-{{ item.status|lower|replace(' ', '-') }}">{{ item.status }}</span>
+              </div>
+              <p class="detalhes-item">
+                <span><strong>Categoria:</strong> {{ item.categoria }}</span>
+                <span><strong>Quantidade:</strong> {{ item.quantidade }} un.</span>
+              </p>
+              <small>#{{ item.id }} · Registrado em {{ item.criado_em.strftime('%d/%m/%Y %H:%M') }}</small>
+            </div>
+            <div class="acoes">
+              <a href="{{ url_for('editar', item_id=item.id) }}" class="btn-editar">Editar</a>
+              <form method="post" action="{{ url_for('excluir', item_id=item.id) }}">
+                <button type="submit" class="btn-perigo">Excluir</button>
+              </form>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="vazio">Nenhum equipamento cadastrado ainda. Utilize o formulário ao lado para adicionar o primeiro.</p>
+        {% endif %}
+      </section>
+
+    </div>
   </main>
 
   <script src="{{ url_for('static', filename='validacoes.js') }}"></script>
