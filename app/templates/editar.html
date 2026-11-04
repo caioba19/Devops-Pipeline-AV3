@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Editar Equipamento #{{ equipamento.id }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main>
+    <header class="cabecalho">
+      <div>
+        <h1>Editar Equipamento #{{ equipamento.id }}</h1>
+        <p class="sub">Atualize os dados cadastrais do item no inventário</p>
+      </div>
+      <a href="{{ url_for('index') }}" class="btn-voltar">← Voltar</a>
+    </header>
+
+    <form method="post" action="{{ url_for('atualizar', item_id=equipamento.id) }}" class="card form-grid">
+      <div class="campo">
+        <label for="nome">Nome do Equipamento *</label>
+        <input id="nome" name="nome" required maxlength="120" value="{{ equipamento.nome }}">
+      </div>
+
+      <div class="campo">
+        <label for="categoria">Categoria *</label>
+        <input id="categoria" name="categoria" required maxlength="80" value="{{ equipamento.categoria }}">
+      </div>
+
+      <div class="linha-dupla">
+        <div class="campo">
+          <label for="quantidade">Quantidade *</label>
+          <input id="quantidade" name="quantidade" type="number" min="0" required value="{{ equipamento.quantidade }}">
+        </div>
+
+        <div class="campo">
+          <label for="status">Status *</label>
+          <select id="status" name="status" required>
+            <option value="Disponível" {% if equipamento.status == 'Disponível' %}selected{% endif %}>Disponível</option>
+            <option value="Em Uso" {% if equipamento.status == 'Em Uso' %}selected{% endif %}>Em Uso</option>
+            <option value="Em Manutenção" {% if equipamento.status == 'Em Manutenção' %}selected{% endif %}>Em Manutenção</option>
+            <option value="Desativado" {% if equipamento.status == 'Desativado' %}selected{% endif %}>Desativado</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="acoes-form">
+        <button type="submit" class="btn-primario">Salvar Alterações</button>
+        <a href="{{ url_for('index') }}" class="btn-cancelar">Cancelar</a>
+      </div>
+    </form>
+  </main>
+</body>
+</html>

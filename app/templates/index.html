@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Controle de Equipamentos de TI — Projeto 0</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main>
+    <header class="cabecalho">
+      <div>
+        <h1>Controle de Equipamentos de TI</h1>
+        <p class="sub">Gestão e inventário de equipamentos do laboratório · PostgreSQL na Aiven</p>
+      </div>
+      <a href="{{ url_for('healthz') }}" target="_blank" class="badge-health">Healthz</a>
+    </header>
+
+    <form method="post" action="{{ url_for('criar') }}" class="card form-grid">
+      <h2>Novo Equipamento</h2>
+
+      <div class="campo">
+        <label for="nome">Nome do Equipamento *</label>
+        <input id="nome" name="nome" required maxlength="120" placeholder="Ex.: Switch Cisco 24 Portas Gigabit">
+      </div>
+
+      <div class="campo">
+        <label for="categoria">Categoria *</label>
+        <input id="categoria" name="categoria" required maxlength="80" placeholder="Ex.: Redes, Servidores, Periféricos">
+      </div>
+
+      <div class="linha-dupla">
+        <div class="campo">
+          <label for="quantidade">Quantidade *</label>
+          <input id="quantidade" name="quantidade" type="number" min="0" required value="1">
+        </div>
+
+        <div class="campo">
+          <label for="status">Status *</label>
+          <select id="status" name="status" required>
+            <option value="Disponível" selected>Disponível</option>
+            <option value="Em Uso">Em Uso</option>
+            <option value="Em Manutenção">Em Manutenção</option>
+            <option value="Desativado">Desativado</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primario">Cadastrar Equipamento</button>
+    </form>
+
+    <section class="secao-lista">
+      <h2>Equipamentos Cadastrados ({{ equipamentos|length }})</h2>
+
+      {% if equipamentos %}
+      <ul class="lista">
+        {% for item in equipamentos %}
+        <li class="card item-equipamento">
+          <div class="info-equipamento">
+            <div class="topo-item">
+              <strong>{{ item.nome }}</strong>
+              <span class="status-tag status-{{ item.status|lower|replace(' ', '-') }}">{{ item.status }}</span>
+            </div>
+            <p class="detalhes-item">
+              <span><strong>Categoria:</strong> {{ item.categoria }}</span>
+              <span><strong>Quantidade:</strong> {{ item.quantidade }}</span>
+            </p>
+            <small>#{{ item.id }} · Registrado em {{ item.criado_em.strftime('%d/%m/%Y %H:%M') }}</small>
+          </div>
+          <div class="acoes">
+            <a href="{{ url_for('editar', item_id=item.id) }}" class="btn-editar">Editar</a>
+            <form method="post" action="{{ url_for('excluir', item_id=item.id) }}">
+              <button type="submit" class="btn-perigo" onclick="return confirm('Confirma a exclusão deste equipamento?');">Excluir</button>
+            </form>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="vazio">Nenhum equipamento cadastrado ainda. Utilize o formulário acima para adicionar o primeiro.</p>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>

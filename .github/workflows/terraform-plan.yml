@@ -1,0 +1,57 @@
+name: Terraform - Plan (pull request)
+
+# Roda em todo pull request que mexe em terraform/. Nunca altera a infraestrutura.
+on:
+  pull_request:
+    paths:
+      - "terraform/**"
+
+env:
+  TF_VAR_aiven_api_token: ${{ secrets.AIVEN_API_TOKEN }}
+  TF_VAR_aiven_project: ${{ secrets.AIVEN_PROJECT }}
+  TF_VAR_cloud_name: ${{ vars.CLOUD_NAME }}
+  TF_VAR_pg_plan: ${{ vars.PG_PLAN }}
+  TF_VAR_service_name: ${{ vars.SERVICE_NAME }}
+  TF_HTTP_ADDRESS: ${{ secrets.TF_STATE_ADDRESS }}
+  TF_HTTP_LOCK_ADDRESS: ${{ secrets.TF_STATE_ADDRESS }}/lock
+  TF_HTTP_UNLOCK_ADDRESS: ${{ secrets.TF_STATE_ADDRESS }}/lock
+  TF_HTTP_LOCK_METHOD: POST
+  TF_HTTP_UNLOCK_METHOD: DELETE
+  TF_HTTP_USERNAME: ${{ secrets.TF_STATE_USERNAME }}
+  TF_HTTP_PASSWORD: ${{ secrets.TF_STATE_PASSWORD }}
+  TF_HTTP_RETRY_WAIT_MIN: "5"
+
+jobs:
+  plan:
+    name: fmt, validate e plan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.5"
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: terraform plan -input=false -no-color -out=tfplan
+
+      - name: Mostrar o plano no resumo da execução
+        run: |
+          {
+            echo '## Resultado do terraform plan'
+            echo '```'
+            terraform show -no-color tfplan
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

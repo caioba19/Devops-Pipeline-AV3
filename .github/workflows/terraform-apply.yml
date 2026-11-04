@@ -1,0 +1,67 @@
+name: Terraform - Apply (main, com aprovação)
+
+# Roda quando algo em terraform/ chega na main, ou manualmente.
+# O job usa o Environment "production": configure um revisor obrigatório em
+# Settings > Environments > production > Required reviewers. O job só começa
+# depois que o revisor aprovar.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "terraform/**"
+  workflow_dispatch:
+
+concurrency:
+  group: terraform-state
+  cancel-in-progress: false
+
+env:
+  TF_VAR_aiven_api_token: ${{ secrets.AIVEN_API_TOKEN }}
+  TF_VAR_aiven_project: ${{ secrets.AIVEN_PROJECT }}
+  TF_VAR_cloud_name: ${{ vars.CLOUD_NAME }}
+  TF_VAR_pg_plan: ${{ vars.PG_PLAN }}
+  TF_VAR_service_name: ${{ vars.SERVICE_NAME }}
+  TF_HTTP_ADDRESS: ${{ secrets.TF_STATE_ADDRESS }}
+  TF_HTTP_LOCK_ADDRESS: ${{ secrets.TF_STATE_ADDRESS }}/lock
+  TF_HTTP_UNLOCK_ADDRESS: ${{ secrets.TF_STATE_ADDRESS }}/lock
+  TF_HTTP_LOCK_METHOD: POST
+  TF_HTTP_UNLOCK_METHOD: DELETE
+  TF_HTTP_USERNAME: ${{ secrets.TF_STATE_USERNAME }}
+  TF_HTTP_PASSWORD: ${{ secrets.TF_STATE_PASSWORD }}
+  TF_HTTP_RETRY_WAIT_MIN: "5"
+
+jobs:
+  apply:
+    name: plan e apply
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.5"
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Terraform plan
+        run: terraform plan -input=false -no-color -out=tfplan
+
+      - name: Terraform apply
+        run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Resumo (sem valores sensíveis)
+        run: |
+          {
+            echo '## Infraestrutura aplicada'
+            echo "Host: $(terraform output -raw pg_host)"
+            echo "Porta: $(terraform output -raw pg_port)"
+            echo 'A URI de conexão completa fica no console da Aiven.'
+          } >> "$GITHUB_STEP_SUMMARY"

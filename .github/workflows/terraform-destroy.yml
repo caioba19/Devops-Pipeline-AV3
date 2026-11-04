@@ -1,0 +1,47 @@
+name: Terraform - Destroy (manual)
+
+# Remove TODA a infraestrutura criada pelo Terraform. Só roda manualmente e
+# exige digitar DESTRUIR. Use depois da nota, para liberar os recursos.
+on:
+  workflow_dispatch:
+    inputs:
+      confirmar:
+        description: "Digite DESTRUIR para confirmar"
+        required: true
+
+env:
+  TF_VAR_aiven_api_token: ${{ secrets.AIVEN_API_TOKEN }}
+  TF_VAR_aiven_project: ${{ secrets.AIVEN_PROJECT }}
+  TF_VAR_cloud_name: ${{ vars.CLOUD_NAME }}
+  TF_VAR_pg_plan: ${{ vars.PG_PLAN }}
+  TF_VAR_service_name: ${{ vars.SERVICE_NAME }}
+  TF_HTTP_ADDRESS: ${{ secrets.TF_STATE_ADDRESS }}
+  TF_HTTP_LOCK_ADDRESS: ${{ secrets.TF_STATE_ADDRESS }}/lock
+  TF_HTTP_UNLOCK_ADDRESS: ${{ secrets.TF_STATE_ADDRESS }}/lock
+  TF_HTTP_LOCK_METHOD: POST
+  TF_HTTP_UNLOCK_METHOD: DELETE
+  TF_HTTP_USERNAME: ${{ secrets.TF_STATE_USERNAME }}
+  TF_HTTP_PASSWORD: ${{ secrets.TF_STATE_PASSWORD }}
+  TF_HTTP_RETRY_WAIT_MIN: "5"
+
+jobs:
+  destroy:
+    name: destroy
+    if: ${{ github.event.inputs.confirmar == 'DESTRUIR' }}
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.5"
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform destroy
+        run: terraform destroy -input=false -auto-approve
