@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portal do Laboratório de TI — Agendamento de Salas</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main>
+    <header class="cabecalho">
+      <div>
+        <h1>Portal do Laboratório de TI</h1>
+        <p class="sub">Gestão unificada de inventário e reservas · PostgreSQL na Aiven</p>
+      </div>
+      <a href="{{ url_for('healthz') }}" target="_blank" class="badge-health">Healthz 200 OK</a>
+    </header>
+
+    <nav class="abas">
+      <a href="{{ url_for('index') }}" class="aba {% if aba == 'equipamentos' %}ativa{% endif %}">
+        📦 Controle de Equipamentos
+      </a>
+      <a href="{{ url_for('index_reservas') }}" class="aba {% if aba == 'reservas' %}ativa{% endif %}">
+        📅 Agendamento de Salas / Labs
+      </a>
+    </nav>
+
+    <form method="post" action="{{ url_for('criar_reserva') }}" class="card form-grid">
+      <h2>Agendar Nova Sala / Laboratório</h2>
+
+      <div class="campo">
+        <label for="sala">Sala ou Laboratório *</label>
+        <input id="sala" name="sala" required maxlength="100" placeholder="Ex.: Laboratório 04 - Redes e Infraestrutura">
+      </div>
+
+      <div class="campo">
+        <label for="responsavel">Professor ou Responsável *</label>
+        <input id="responsavel" name="responsavel" required maxlength="100" placeholder="Ex.: Prof. Carlos Eduardo">
+      </div>
+
+      <div class="linha-dupla">
+        <div class="campo">
+          <label for="data_reserva">Data do Agendamento * (Campo Data)</label>
+          <input id="data_reserva" name="data_reserva" type="date" required>
+        </div>
+
+        <div class="campo">
+          <label for="turno">Turno / Período *</label>
+          <select id="turno" name="turno" required>
+            <option value="Manhã" selected>Manhã (08:00 - 12:00)</option>
+            <option value="Tarde">Tarde (13:30 - 17:30)</option>
+            <option value="Noite">Noite (18:30 - 22:30)</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primario">Confirmar Agendamento</button>
+    </form>
+
+    <section class="secao-lista">
+      <h2>Reservas Cadastradas ({{ reservas|length }})</h2>
+
+      {% if reservas %}
+      <ul class="lista">
+        {% for item in reservas %}
+        <li class="card item-equipamento">
+          <div class="info-equipamento">
+            <div class="topo-item">
+              <strong>{{ item.sala }}</strong>
+              <span class="status-tag status-em-uso">{{ item.turno }}</span>
+            </div>
+            <p class="detalhes-item">
+              <span><strong>Responsável:</strong> {{ item.responsavel }}</span>
+              <span><strong>Data:</strong> {{ item.data_reserva.strftime('%d/%m/%Y') }}</span>
+            </p>
+            <small>#{{ item.id }} · Solicitado em {{ item.criado_em.strftime('%d/%m/%Y %H:%M') }}</small>
+          </div>
+          <div class="acoes">
+            <a href="{{ url_for('editar_reserva', reserva_id=item.id) }}" class="btn-editar">Editar</a>
+            <form method="post" action="{{ url_for('excluir_reserva', reserva_id=item.id) }}">
+              <button type="submit" class="btn-perigo" onclick="return confirm('Confirma o cancelamento desta reserva?');">Excluir</button>
+            </form>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="vazio">Nenhuma reserva agendada ainda. Utilize o formulário acima para agendar um horário.</p>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>

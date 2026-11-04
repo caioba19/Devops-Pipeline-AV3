@@ -23,6 +23,30 @@ h1 { margin: 0 0 6px; font-size: 1.6rem; }
 h2 { margin: 0 0 16px; font-size: 1.15rem; }
 .sub { color: var(--suave); margin: 0; font-size: 0.95rem; }
 
+.abas {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--borda);
+  padding-bottom: 2px;
+}
+.aba {
+  padding: 8px 16px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--suave);
+  border-radius: 6px 6px 0 0;
+  transition: all 0.2s ease;
+  border-bottom: 3px solid transparent;
+}
+.aba:hover { color: var(--cor); background: #ebf0f5; }
+.aba.ativa {
+  color: var(--cor);
+  border-bottom: 3px solid var(--cor);
+  background: #fff;
+}
+
 .badge-health {
   font-size: 0.75rem;
   padding: 4px 10px;

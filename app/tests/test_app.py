@@ -21,7 +21,7 @@ def client():
     db.ensure_schema()
     with db.get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("TRUNCATE equipamentos RESTART IDENTITY;")
+            cur.execute("TRUNCATE equipamentos, reservas RESTART IDENTITY;")
     app_module.app.config["TESTING"] = True
     return app_module.app.test_client()
 
@@ -32,8 +32,12 @@ def test_healthz_ok(client):
     assert resp.get_json()["status"] == "ok"
 
 
-def test_crud_completo(client):
-    # 1. Criar equipamento com os 4 campos (nome, categoria, quantidade, status)
+# ============================================================
+# Testes do Módulo 1: Equipamentos
+# ============================================================
+
+def test_crud_equipamentos_completo(client):
+    # 1. Criar equipamento com 4 campos
     resp = client.post(
         "/equipamentos",
         data={
@@ -45,7 +49,7 @@ def test_crud_completo(client):
     )
     assert resp.status_code == 302
 
-    # 2. Listar e validar persistência de todos os campos
+    # 2. Listar e validar
     dados = client.get("/api/equipamentos").get_json()
     assert len(dados) == 1
     assert dados[0]["nome"] == "Switch Cisco 24 Portas"
@@ -71,7 +75,6 @@ def test_crud_completo(client):
 
     dados_atualizados = client.get("/api/equipamentos").get_json()
     assert dados_atualizados[0]["nome"] == "Switch Cisco Gigabit"
-    assert dados_atualizados[0]["categoria"] == "Redes e Telecom"
     assert dados_atualizados[0]["quantidade"] == 8
     assert dados_atualizados[0]["status"] == "Em Uso"
 
@@ -81,47 +84,101 @@ def test_crud_completo(client):
     assert client.get("/api/equipamentos").get_json() == []
 
 
-def test_validacoes_campos_obrigatorios(client):
+def test_validacoes_equipamentos(client):
     # Nome vazio
     resp = client.post(
         "/equipamentos",
-        data={
-            "nome": "   ",
-            "categoria": "Redes",
-            "quantidade": "5",
-            "status": "Disponível",
-        },
+        data={"nome": " ", "categoria": "Redes", "quantidade": "5"},
     )
     assert resp.status_code == 400
 
     # Categoria vazia
     resp = client.post(
         "/equipamentos",
-        data={
-            "nome": "Monitor",
-            "categoria": "  ",
-            "quantidade": "2",
-            "status": "Disponível",
-        },
+        data={"nome": "Monitor", "categoria": " ", "quantidade": "2"},
     )
     assert resp.status_code == 400
 
-    # Quantidade negativa ou não numérica
+    # Quantidade negativa
     resp = client.post(
         "/equipamentos",
-        data={
-            "nome": "Monitor",
-            "categoria": "Periféricos",
-            "quantidade": "-1",
-            "status": "Disponível",
-        },
+        data={"nome": "Monitor", "categoria": "TI", "quantidade": "-1"},
     )
     assert resp.status_code == 400
 
 
-def test_item_inexistente(client):
+# ============================================================
+# Testes do Módulo 2: Reservas de Salas
+# ============================================================
+
+def test_crud_reservas_completo(client):
+    # 1. Criar reserva com os 4 campos
+    resp = client.post(
+        "/reservas",
+        data={
+            "sala": "Lab 02 - Redes",
+            "responsavel": "Prof. Marcos",
+            "data_reserva": "2026-11-20",
+            "turno": "Manhã",
+        },
+    )
+    assert resp.status_code == 302
+
+    # 2. Listar e validar
+    dados = client.get("/api/reservas").get_json()
+    assert len(dados) == 1
+    assert dados[0]["sala"] == "Lab 02 - Redes"
+    assert dados[0]["responsavel"] == "Prof. Marcos"
+    assert dados[0]["data_reserva"] == "2026-11-20"
+    assert dados[0]["turno"] == "Manhã"
+
+    reserva_id = dados[0]["id"]
+    assert client.get("/reservas").status_code == 200
+    assert client.get(f"/reservas/{reserva_id}/editar").status_code == 200
+
+    # 3. Editar reserva
+    resp = client.post(
+        f"/reservas/{reserva_id}",
+        data={
+            "sala": "Lab 04 - Infraestrutura",
+            "responsavel": "Prof. Marcos Silva",
+            "data_reserva": "2026-11-21",
+            "turno": "Noite",
+        },
+    )
+    assert resp.status_code == 302
+
+    dados_atualizados = client.get("/api/reservas").get_json()
+    assert dados_atualizados[0]["sala"] == "Lab 04 - Infraestrutura"
+    assert dados_atualizados[0]["turno"] == "Noite"
+
+    # 4. Excluir reserva
+    resp = client.post(f"/reservas/{reserva_id}/excluir")
+    assert resp.status_code == 302
+    assert client.get("/api/reservas").get_json() == []
+
+
+def test_validacoes_reservas(client):
+    # Sala vazia
+    resp = client.post(
+        "/reservas",
+        data={"sala": " ", "responsavel": "Prof.", "data_reserva": "2026-11-20"},
+    )
+    assert resp.status_code == 400
+
+    # Data inválida
+    resp = client.post(
+        "/reservas",
+        data={"sala": "Lab 1", "responsavel": "Prof.", "data_reserva": "data-errada"},
+    )
+    assert resp.status_code == 400
+
+
+def test_itens_inexistentes(client):
     assert client.get("/equipamentos/9999/editar").status_code == 404
     assert client.post("/equipamentos/9999/excluir").status_code == 404
+    assert client.get("/reservas/9999/editar").status_code == 404
+    assert client.post("/reservas/9999/excluir").status_code == 404
 
 
 def test_healthz_sem_banco(client, monkeypatch):

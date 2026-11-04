@@ -9,14 +9,20 @@
 
 ---
 
-### 📦 Tema do Projeto: Controle de Equipamentos de TI / Laboratório
-Aplicação para gestão e inventário de equipamentos e periféricos dos laboratórios.
-* **Entidade:** `equipamentos`
-* **Campos da Entidade:**
-  1. `nome` *(Texto)* — Ex.: Switch Cisco 24 Portas Gigabit
-  2. `categoria` *(Texto)* — Ex.: Redes, Servidores, Periféricos
-  3. `quantidade` *(Número Inteiro)* — **Campo não textual obrigatório**
-  4. `status` *(Status)* — Disponível, Em Uso, Em Manutenção, Desativado
+### 📦 Tema do Projeto: Portal de Gestão de Laboratórios de TI
+Aplicação unificada com dois módulos integrados:
+
+1. **Módulo de Equipamentos (`equipamentos`):**
+   * `nome` *(Texto)* — Ex.: Switch Cisco 24 Portas Gigabit
+   * `categoria` *(Texto)* — Ex.: Redes, Servidores, Periféricos
+   * `quantidade` *(Número Inteiro)* — **Campo não textual**
+   * `status` *(Status)* — Disponível, Em Uso, Em Manutenção, Desativado
+
+2. **Módulo de Agendamento de Salas / Labs (`reservas`):**
+   * `sala` *(Texto)* — Ex.: Laboratório 04 - Redes e Cloud
+   * `responsavel` *(Texto)* — Ex.: Prof. Carlos Silva
+   * `data_reserva` *(Data)* — Ex.: 2026-11-20 — **Campo não textual**
+   * `turno` *(Seleção)* — Manhã, Tarde, Noite
 
 ---
 

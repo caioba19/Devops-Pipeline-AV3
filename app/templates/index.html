@@ -3,21 +3,30 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Controle de Equipamentos de TI — Projeto 0</title>
+  <title>Portal do Laboratório de TI — Equipamentos</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <main>
     <header class="cabecalho">
       <div>
-        <h1>Controle de Equipamentos de TI</h1>
-        <p class="sub">Gestão e inventário de equipamentos do laboratório · PostgreSQL na Aiven</p>
+        <h1>Portal do Laboratório de TI</h1>
+        <p class="sub">Gestão unificada de inventário e reservas · PostgreSQL na Aiven</p>
       </div>
-      <a href="{{ url_for('healthz') }}" target="_blank" class="badge-health">Healthz</a>
+      <a href="{{ url_for('healthz') }}" target="_blank" class="badge-health">Healthz 200 OK</a>
     </header>
 
+    <nav class="abas">
+      <a href="{{ url_for('index') }}" class="aba {% if aba == 'equipamentos' %}ativa{% endif %}">
+        📦 Controle de Equipamentos
+      </a>
+      <a href="{{ url_for('index_reservas') }}" class="aba {% if aba == 'reservas' %}ativa{% endif %}">
+        📅 Agendamento de Salas / Labs
+      </a>
+    </nav>
+
     <form method="post" action="{{ url_for('criar') }}" class="card form-grid">
-      <h2>Novo Equipamento</h2>
+      <h2>Cadastrar Novo Equipamento</h2>
 
       <div class="campo">
         <label for="nome">Nome do Equipamento *</label>
@@ -31,7 +40,7 @@
 
       <div class="linha-dupla">
         <div class="campo">
-          <label for="quantidade">Quantidade *</label>
+          <label for="quantidade">Quantidade * (Campo Numérico)</label>
           <input id="quantidade" name="quantidade" type="number" min="0" required value="1">
         </div>
 
@@ -63,7 +72,7 @@
             </div>
             <p class="detalhes-item">
               <span><strong>Categoria:</strong> {{ item.categoria }}</span>
-              <span><strong>Quantidade:</strong> {{ item.quantidade }}</span>
+              <span><strong>Quantidade:</strong> {{ item.quantidade }} un.</span>
             </p>
             <small>#{{ item.id }} · Registrado em {{ item.criado_em.strftime('%d/%m/%Y %H:%M') }}</small>
           </div>

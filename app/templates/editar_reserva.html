@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Editar Reserva #{{ reserva.id }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main>
+    <header class="cabecalho">
+      <div>
+        <h1>Editar Reserva #{{ reserva.id }}</h1>
+        <p class="sub">Atualize os dados da reserva de sala ou laboratório</p>
+      </div>
+      <a href="{{ url_for('index_reservas') }}" class="btn-voltar">← Voltar</a>
+    </header>
+
+    <form method="post" action="{{ url_for('atualizar_reserva', reserva_id=reserva.id) }}" class="card form-grid">
+      <div class="campo">
+        <label for="sala">Sala ou Laboratório *</label>
+        <input id="sala" name="sala" required maxlength="100" value="{{ reserva.sala }}">
+      </div>
+
+      <div class="campo">
+        <label for="responsavel">Professor ou Responsável *</label>
+        <input id="responsavel" name="responsavel" required maxlength="100" value="{{ reserva.responsavel }}">
+      </div>
+
+      <div class="linha-dupla">
+        <div class="campo">
+          <label for="data_reserva">Data do Agendamento * (Campo Data)</label>
+          <input id="data_reserva" name="data_reserva" type="date" required value="{{ reserva.data_reserva.isoformat() }}">
+        </div>
+
+        <div class="campo">
+          <label for="turno">Turno / Período *</label>
+          <select id="turno" name="turno" required>
+            <option value="Manhã" {% if reserva.turno == 'Manhã' %}selected{% endif %}>Manhã (08:00 - 12:00)</option>
+            <option value="Tarde" {% if reserva.turno == 'Tarde' %}selected{% endif %}>Tarde (13:30 - 17:30)</option>
+            <option value="Noite" {% if reserva.turno == 'Noite' %}selected{% endif %}>Noite (18:30 - 22:30)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="acoes-form">
+        <button type="submit" class="btn-primario">Salvar Alterações</button>
+        <a href="{{ url_for('index_reservas') }}" class="btn-cancelar">Cancelar</a>
+      </div>
+    </form>
+  </main>
+</body>
+</html>
