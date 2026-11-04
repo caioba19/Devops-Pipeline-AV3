@@ -1,0 +1,28 @@
+# ==============================================================================
+# terraform.tfvars.example — Exemplo de variáveis para provisionamento na Aiven
+# ==============================================================================
+# ATENÇÃO: Nunca comite o arquivo "terraform.tfvars" com valores reais de tokens.
+# No GitHub Actions, essas variáveis são fornecidas via Secrets e Variables.
+# Este arquivo serve como referência para testes manuais ou conferência.
+
+# Nome do projeto cadastrado no console da Aiven (ex.: "meu-projeto-aiven")
+aiven_project = "projeto-devops-turma"
+
+# Nuvem e região onde o PostgreSQL será hospedado (ex.: Google Cloud em São Paulo)
+cloud_name = "google-southamerica-east1"
+
+# Nome do plano GRATUITO do PostgreSQL no console da Aiven (ex.: "startup-4" ou plano free)
+pg_plan = "startup-4"
+
+# Nome do serviço PostgreSQL seguindo a exigência do professor: equipe-<numero>-pg
+service_name = "equipe-01-pg"
+
+# Nome do banco de dados da aplicação dentro do serviço
+database_name = "appdb"
+
+# Nome do usuário adicional criado para a aplicação
+db_username = "app_user"
+
+# Token de API gerado na sua conta Aiven (User information -> Authentication tokens)
+# No CI/CD, isso vem obrigatoriamente do secret AIVEN_API_TOKEN do GitHub Actions!
+# aiven_api_token = "COLE_SEU_TOKEN_AQUI_SE_FOR_RODAR_LOCALMENTE"
